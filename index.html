@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Karaoke Key Finder</title>
+  <meta name="description" content="Find the best singing key for any song — original, male, and female karaoke keys." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #080a0f;
+      --surface:     #0f1218;
+      --surface2:    #161b24;
+      --surface3:    #1c2330;
+      --border:      rgba(255,255,255,0.06);
+      --border-hi:   rgba(255,255,255,0.12);
+      --text:        #e8e6df;
+      --text-mid:    #8a8880;
+      --text-low:    #3a3a38;
+      --gold:        #c9a84c;
+      --gold-light:  #e2c47a;
+      --gold-dim:    rgba(201,168,76,0.1);
+      --gold-glow:   rgba(201,168,76,0.15);
+      --red:         #d45c5c;
+      --green:       #5bab7e;
+      --r: 14px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 300;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 1.25rem 6rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Background orb */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -20vh;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60vw;
+      height: 60vw;
+      background: radial-gradient(ellipse, rgba(201,168,76,0.04) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 560px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      padding: 4rem 0 3rem;
+      animation: rise 0.7s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    .logo-eyebrow {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+      opacity: 0.9;
+    }
+
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.2rem, 7vw, 3.2rem);
+      font-weight: 400;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 0.75rem;
+    }
+
+    .logo span {
+      font-style: italic;
+      color: var(--gold-light);
+    }
+
+    .logo-sub {
+      font-size: 0.875rem;
+      color: var(--text-mid);
+      font-weight: 300;
+    }
+
+    /* ── Search ── */
+    .search-section {
+      animation: rise 0.7s 0.1s cubic-bezier(0.16,1,0.3,1) both;
+      margin-bottom: 1rem;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border-hi);
+      border-radius: var(--r);
+      padding: 6px 6px 6px 1.25rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .search-box:focus-within {
+      border-color: rgba(201,168,76,0.4);
+      box-shadow: 0 0 0 3px var(--gold-dim);
+    }
+
+    .search-box input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      font-weight: 300;
+      min-width: 0;
+    }
+
+    .search-box input::placeholder { color: var(--text-low); }
+
+    .btn-search {
+      background: var(--gold);
+      border: none;
+      border-radius: 9px;
+      padding: 0.7rem 1.4rem;
+      color: #080a0f;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      white-space: nowrap;
+      letter-spacing: 0.01em;
+    }
+
+    .btn-search:hover:not(:disabled) { background: var(--gold-light); transform: translateY(-1px); }
+    .btn-search:active:not(:disabled) { transform: translateY(0); }
+    .btn-search:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .search-hint {
+      font-size: 0.72rem;
+      color: var(--text-low);
+      text-align: center;
+      margin-top: 0.6rem;
+      letter-spacing: 0.02em;
+    }
+
+    /* ── Loading ── */
+    .loading {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      padding: 2.5rem 0;
+      animation: rise 0.4s ease both;
+    }
+
+    .loading.on { display: flex; }
+
+    .waveform {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 28px;
+    }
+
+    .wave-bar {
+      width: 3px;
+      background: var(--gold);
+      border-radius: 2px;
+      animation: wave 1s ease-in-out infinite;
+    }
+
+    .wave-bar:nth-child(1) { animation-delay: 0s;    height: 8px; }
+    .wave-bar:nth-child(2) { animation-delay: 0.1s;  height: 18px; }
+    .wave-bar:nth-child(3) { animation-delay: 0.2s;  height: 28px; }
+    .wave-bar:nth-child(4) { animation-delay: 0.3s;  height: 18px; }
+    .wave-bar:nth-child(5) { animation-delay: 0.4s;  height: 8px; }
+    .wave-bar:nth-child(6) { animation-delay: 0.5s;  height: 18px; }
+    .wave-bar:nth-child(7) { animation-delay: 0.6s;  height: 28px; }
+
+    @keyframes wave {
+      0%, 100% { transform: scaleY(0.4); opacity: 0.5; }
+      50%       { transform: scaleY(1);   opacity: 1; }
+    }
+
+    .loading-text {
+      font-size: 0.8rem;
+      color: var(--text-mid);
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Error ── */
+    .error {
+      display: none;
+      background: rgba(212,92,92,0.08);
+      border: 1px solid rgba(212,92,92,0.2);
+      border-radius: var(--r);
+      padding: 1rem 1.25rem;
+      color: var(--red);
+      font-size: 0.875rem;
+      margin-top: 1rem;
+      line-height: 1.5;
+    }
+
+    .error.on { display: block; }
+
+    /* ── Result ── */
+    .result {
+      display: none;
+      margin-top: 2rem;
+    }
+
+    .result.on {
+      display: block;
+      animation: rise 0.5s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    .result-header {
+      margin-bottom: 1.25rem;
+    }
+
+    .result-song {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 400;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 0.2rem;
+    }
+
+    .result-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-mid);
+    }
+
+    .key-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .key-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 1.25rem 0.75rem 1rem;
+      text-align: center;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .key-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: transparent;
+      transition: background 0.2s;
+    }
+
+    .key-card.original::before { background: var(--gold); }
+    .key-card.male::before     { background: #5b8fd4; }
+    .key-card.female::before   { background: #d45b8f; }
+
+    .key-card:hover {
+      border-color: var(--border-hi);
+      background: var(--surface2);
+    }
+
+    .key-card-label {
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--text-mid);
+      margin-bottom: 0.6rem;
+    }
+
+    .key-card-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.9rem;
+      font-weight: 600;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    .key-card.original .key-card-value { color: var(--gold-light); }
+    .key-card.male     .key-card-value { color: #8bb5e8; }
+    .key-card.female   .key-card-value { color: #e88bba; }
+
+    /* ── YouTube button ── */
+    .yt-btn {
+      display: none;
+      align-items: center;
+      gap: 0.875rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 0.875rem 1.25rem;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: border-color 0.2s, background 0.2s;
+      width: 100%;
+    }
+
+    .yt-btn:hover {
+      border-color: var(--border-hi);
+      background: var(--surface2);
+    }
+
+    .yt-btn.on { display: flex; }
+
+    .yt-pill {
+      background: #ff0000;
+      border-radius: 7px;
+      width: 32px; height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .yt-pill svg { width: 12px; height: 12px; }
+
+    .yt-info { flex: 1; overflow: hidden; }
+
+    .yt-eyebrow {
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-mid);
+      margin-bottom: 2px;
+    }
+
+    .yt-name {
+      font-size: 0.875rem;
+      font-weight: 400;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text);
+    }
+
+    .yt-arrow {
+      color: var(--text-low);
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    /* ── Tab links ── */
+    .tab-links {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+      margin-bottom: 12px;
+    }
+
+    .tab-btn {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      border-radius: 9px;
+      padding: 0.6rem 0.75rem;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 400;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .tab-btn.on { display: flex; }
+
+    .tab-btn.male-tab {
+      color: #8bb5e8;
+      background: rgba(91,143,212,0.06);
+      border: 1px solid rgba(91,143,212,0.2);
+    }
+    .tab-btn.male-tab:hover {
+      background: rgba(91,143,212,0.12);
+      border-color: rgba(91,143,212,0.4);
+    }
+
+    .tab-btn.female-tab {
+      color: #e88bba;
+      background: rgba(212,91,143,0.06);
+      border: 1px solid rgba(212,91,143,0.2);
+    }
+    .tab-btn.female-tab:hover {
+      background: rgba(212,91,143,0.12);
+      border-color: rgba(212,91,143,0.4);
+    }
+
+    /* ── Footer ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      margin-top: 5rem;
+      font-size: 0.72rem;
+      color: var(--text-low);
+      line-height: 1.8;
+    }
+
+    footer a { color: var(--text-mid); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    /* ── Divider ── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 2.5rem 0;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 400px) {
+      .key-grid { grid-template-columns: 1fr; gap: 8px; }
+      .key-card { padding: 1rem; display: flex; align-items: center; gap: 1rem; text-align: left; }
+      .key-card-label { margin-bottom: 0; min-width: 60px; }
+      .key-card-value { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <p class="logo-eyebrow">AI-powered · any language</p>
+    <h1 class="logo">Karaoke <span>Key</span> Finder</h1>
+    <p class="logo-sub">Original · Male · Female — for any song, any language</p>
+  </header>
+
+  <!-- Search -->
+  <section class="search-section">
+    <div class="search-box">
+      <input
+        type="text"
+        id="songInput"
+        placeholder="e.g. Nguoi Hay Quen Em Di My Tam"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button class="btn-search" id="searchBtn" onclick="doSearch()">Find Key</button>
+    </div>
+    <p class="search-hint">Works with Vietnamese, English, Korean, and more · diacritics optional</p>
+  </section>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="waveform">
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+    </div>
+    <p class="loading-text" id="loadingMsg">Searching karaoke versions…</p>
+  </div>
+
+  <!-- Error -->
+  <div class="error" id="error"></div>
+
+  <!-- Result -->
+  <div class="result" id="result">
+    <div class="result-header">
+      <p class="result-song" id="rSong"></p>
+      <p class="result-label">Recommended singing keys</p>
+    </div>
+
+    <div class="key-grid">
+      <div class="key-card original">
+        <div class="key-card-label">Original</div>
+        <div class="key-card-value" id="rOrig"></div>
+      </div>
+      <div class="key-card male">
+        <div class="key-card-label">Male</div>
+        <div class="key-card-value" id="rMale"></div>
+      </div>
+      <div class="key-card female">
+        <div class="key-card-label">Female</div>
+        <div class="key-card-value" id="rFemale"></div>
+      </div>
+    </div>
+
+    <div class="tab-links">
+      <a class="tab-btn male-tab" id="maleTabBtn" href="#" target="_blank" rel="noopener noreferrer">
+        🎸 Male chords &amp; tabs
+      </a>
+      <a class="tab-btn female-tab" id="femaleTabBtn" href="#" target="_blank" rel="noopener noreferrer">
+        🎹 Female chords &amp; tabs
+      </a>
+    </div>
+
+    <a class="yt-btn" id="ytBtn" href="#" target="_blank" rel="noopener noreferrer">
+      <div class="yt-pill">
+        <svg viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+      </div>
+      <div class="yt-info">
+        <div class="yt-eyebrow">Watch original on YouTube</div>
+        <div class="yt-name" id="ytName"></div>
+      </div>
+      <span class="yt-arrow">↗</span>
+    </a>
+  </div>
+
+  <hr class="divider" />
+
+  <footer>
+    <p>Powered by <a href="https://anthropic.com" target="_blank">Claude AI</a> &amp; web search</p>
+    <p>Keys sourced from karaoke databases, YouTube &amp; music chord sites</p>
+  </footer>
+
+</div>
+
+<script>
+  const loadingMessages = [
+    'Searching karaoke versions…',
+    'Checking music databases…',
+    'Scanning chord sites…',
+    'Calculating best keys…',
+  ];
+
+  let msgIndex = 0;
+  let msgTimer = null;
+
+  function startLoadingMessages() {
+    msgIndex = 0;
+    document.getElementById('loadingMsg').textContent = loadingMessages[0];
+    msgTimer = setInterval(() => {
+      msgIndex = (msgIndex + 1) % loadingMessages.length;
+      document.getElementById('loadingMsg').textContent = loadingMessages[msgIndex];
+    }, 2200);
+  }
+
+  function stopLoadingMessages() {
+    clearInterval(msgTimer);
+  }
+
+  async function doSearch() {
+    const song = document.getElementById('songInput').value.trim();
+    if (!song) return;
+
+    // Reset UI
+    document.getElementById('error').classList.remove('on');
+    document.getElementById('result').classList.remove('on');
+    document.getElementById('loading').classList.add('on');
+    document.getElementById('searchBtn').disabled = true;
+    startLoadingMessages();
+
+    try {
+      const res = await fetch('/api/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ song }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Something went wrong. Please try again.');
+      }
+
+      // Populate results
+      document.getElementById('rSong').textContent   = data.song   || song;
+      document.getElementById('rOrig').textContent   = data.original;
+      document.getElementById('rMale').textContent   = data.male;
+      document.getElementById('rFemale').textContent = data.female;
+
+      const ytBtn = document.getElementById('ytBtn');
+      if (data.youtube && data.youtube !== 'NONE' && data.youtube.startsWith('http')) {
+        ytBtn.href = data.youtube;
+        document.getElementById('ytName').textContent = data.song || song;
+        ytBtn.classList.add('on');
+      } else {
+        ytBtn.classList.remove('on');
+      }
+
+      const maleTab = document.getElementById('maleTabBtn');
+      if (data.male_tab && data.male_tab !== 'NONE' && data.male_tab.startsWith('http')) {
+        maleTab.href = data.male_tab;
+        maleTab.classList.add('on');
+      } else {
+        maleTab.classList.remove('on');
+      }
+
+      const femaleTab = document.getElementById('femaleTabBtn');
+      if (data.female_tab && data.female_tab !== 'NONE' && data.female_tab.startsWith('http')) {
+        femaleTab.href = data.female_tab;
+        femaleTab.classList.add('on');
+      } else {
+        femaleTab.classList.remove('on');
+      }
+
+      document.getElementById('result').classList.add('on');
+
+    } catch (err) {
+      document.getElementById('error').textContent = err.message;
+      document.getElementById('error').classList.add('on');
+    } finally {
+      stopLoadingMessages();
+      document.getElementById('loading').classList.remove('on');
+      document.getElementById('searchBtn').disabled = false;
+    }
+  }
+
+  document.getElementById('songInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSearch();
+  });
+</script>
+
+</body>
+</html>
