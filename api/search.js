@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // Only allow POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -14,25 +13,15 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing song name' });
   }
 
-  const prompt = `Search karaoke versions and chord/tab sheets for the song: "${song.trim()}"
-
-Search across:
-- Karaoke sites and YouTube for keys (nhaccuatui, nhac.vn, karaoke sites)
-- Chord and tab sites for lead sheets: hopamviet.vn, hopamchuan.com, ultimate-guitar.com, cifraclub.com, tabs.ultimate-guitar.com
-
-Find:
-1. The original key and most common male/female karaoke keys
-2. A direct URL to a chord chart or lead sheet for the male key (prefer hopamviet or hopamchuan for Vietnamese songs, ultimate-guitar for English)
-3. A direct URL to a chord chart or lead sheet for the female key
-
-Reply with ONLY this exact format, no extra text:
-SONG: [full song name and artist]
-ORIGINAL: [key e.g. D Minor]
-MALE: [most common male karaoke key]
-FEMALE: [most common female karaoke key]
-YOUTUBE: [official YouTube URL or NONE]
-MALE_TAB: [direct URL to chord/tab sheet in male key or NONE]
-FEMALE_TAB: [direct URL to chord/tab sheet in female key or NONE]`;
+  const prompt = `Find karaoke keys and chords for: "${song.trim()}"
+Reply ONLY in this exact format, no extra text:
+SONG: [name - artist]
+ORIGINAL: [key]
+MALE: [key]
+FEMALE: [key]
+YOUTUBE: [url or NONE]
+MALE_TAB: [chord sheet url or NONE]
+FEMALE_TAB: [chord sheet url or NONE]`;
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -43,8 +32,8 @@ FEMALE_TAB: [direct URL to chord/tab sheet in female key or NONE]`;
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 500,
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 300,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages: [{ role: 'user', content: prompt }],
       }),
@@ -67,12 +56,12 @@ FEMALE_TAB: [direct URL to chord/tab sheet in female key or NONE]`;
     };
 
     const result = {
-      song:      get('SONG'),
-      original:  get('ORIGINAL'),
-      male:      get('MALE'),
-      female:    get('FEMALE'),
-      youtube:   get('YOUTUBE'),
-      male_tab:  get('MALE_TAB'),
+      song:       get('SONG'),
+      original:   get('ORIGINAL'),
+      male:       get('MALE'),
+      female:     get('FEMALE'),
+      youtube:    get('YOUTUBE'),
+      male_tab:   get('MALE_TAB'),
       female_tab: get('FEMALE_TAB'),
     };
 
