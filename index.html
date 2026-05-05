@@ -11,21 +11,18 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:          #080a0f;
-      --surface:     #0f1218;
-      --surface2:    #161b24;
-      --surface3:    #1c2330;
-      --border:      rgba(255,255,255,0.06);
-      --border-hi:   rgba(255,255,255,0.12);
-      --text:        #e8e6df;
-      --text-mid:    #8a8880;
-      --text-low:    #3a3a38;
-      --gold:        #c9a84c;
-      --gold-light:  #e2c47a;
-      --gold-dim:    rgba(201,168,76,0.1);
-      --gold-glow:   rgba(201,168,76,0.15);
-      --red:         #d45c5c;
-      --green:       #5bab7e;
+      --bg:         #080a0f;
+      --surface:    #0f1218;
+      --surface2:   #161b24;
+      --border:     rgba(255,255,255,0.06);
+      --border-hi:  rgba(255,255,255,0.12);
+      --text:       #e8e6df;
+      --text-mid:   #8a8880;
+      --text-low:   #3a3a38;
+      --gold:       #c9a84c;
+      --gold-light: #e2c47a;
+      --gold-dim:   rgba(201,168,76,0.1);
+      --red:        #d45c5c;
       --r: 14px;
     }
 
@@ -45,15 +42,12 @@
       overflow-x: hidden;
     }
 
-    /* Background orb */
     body::before {
       content: '';
       position: fixed;
-      top: -20vh;
-      left: 50%;
+      top: -20vh; left: 50%;
       transform: translateX(-50%);
-      width: 60vw;
-      height: 60vw;
+      width: 60vw; height: 60vw;
       background: radial-gradient(ellipse, rgba(201,168,76,0.04) 0%, transparent 70%);
       pointer-events: none;
       z-index: 0;
@@ -92,10 +86,7 @@
       margin-bottom: 0.75rem;
     }
 
-    .logo span {
-      font-style: italic;
-      color: var(--gold-light);
-    }
+    .logo span { font-style: italic; color: var(--gold-light); }
 
     .logo-sub {
       font-size: 0.875rem;
@@ -107,6 +98,7 @@
     .search-section {
       animation: rise 0.7s 0.1s cubic-bezier(0.16,1,0.3,1) both;
       margin-bottom: 1rem;
+      position: relative;
     }
 
     .search-box {
@@ -117,6 +109,8 @@
       border-radius: var(--r);
       padding: 6px 6px 6px 1.25rem;
       transition: border-color 0.2s, box-shadow 0.2s;
+      position: relative;
+      z-index: 10;
     }
 
     .search-box:focus-within {
@@ -165,6 +159,93 @@
       letter-spacing: 0.02em;
     }
 
+    /* ── Autocomplete dropdown ── */
+    .autocomplete {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0; right: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border-hi);
+      border-radius: var(--r);
+      overflow: hidden;
+      z-index: 100;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      display: none;
+    }
+
+    .autocomplete.on { display: block; }
+
+    .ac-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 1rem;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ac-item:last-child { border-bottom: none; }
+    .ac-item:hover, .ac-item.active { background: rgba(201,168,76,0.08); }
+
+    .ac-art {
+      width: 36px; height: 36px;
+      border-radius: 6px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: var(--surface);
+    }
+
+    .ac-art-placeholder {
+      width: 36px; height: 36px;
+      border-radius: 6px;
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .ac-info { flex: 1; overflow: hidden; }
+
+    .ac-track {
+      font-size: 0.875rem;
+      font-weight: 400;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ac-artist {
+      font-size: 0.72rem;
+      color: var(--text-mid);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ac-loading {
+      padding: 0.875rem 1rem;
+      font-size: 0.8rem;
+      color: var(--text-mid);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .ac-spinner {
+      width: 12px; height: 12px;
+      border: 1.5px solid var(--border-hi);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     /* ── Loading ── */
     .loading {
       display: none;
@@ -172,7 +253,6 @@
       align-items: center;
       gap: 1rem;
       padding: 2.5rem 0;
-      animation: rise 0.4s ease both;
     }
 
     .loading.on { display: flex; }
@@ -226,19 +306,14 @@
     .error.on { display: block; }
 
     /* ── Result ── */
-    .result {
-      display: none;
-      margin-top: 2rem;
-    }
+    .result { display: none; margin-top: 2rem; }
 
     .result.on {
       display: block;
       animation: rise 0.5s cubic-bezier(0.16,1,0.3,1) both;
     }
 
-    .result-header {
-      margin-bottom: 1.25rem;
-    }
+    .result-header { margin-bottom: 1.25rem; }
 
     .result-song {
       font-family: 'Playfair Display', serif;
@@ -279,18 +354,13 @@
       position: absolute;
       top: 0; left: 0; right: 0;
       height: 2px;
-      background: transparent;
-      transition: background 0.2s;
     }
 
     .key-card.original::before { background: var(--gold); }
     .key-card.male::before     { background: #5b8fd4; }
     .key-card.female::before   { background: #d45b8f; }
 
-    .key-card:hover {
-      border-color: var(--border-hi);
-      background: var(--surface2);
-    }
+    .key-card:hover { border-color: var(--border-hi); background: var(--surface2); }
 
     .key-card-label {
       font-size: 0.62rem;
@@ -328,11 +398,7 @@
       width: 100%;
     }
 
-    .yt-btn:hover {
-      border-color: var(--border-hi);
-      background: var(--surface2);
-    }
-
+    .yt-btn:hover { border-color: var(--border-hi); background: var(--surface2); }
     .yt-btn.on { display: flex; }
 
     .yt-pill {
@@ -346,7 +412,6 @@
     }
 
     .yt-pill svg { width: 12px; height: 12px; }
-
     .yt-info { flex: 1; overflow: hidden; }
 
     .yt-eyebrow {
@@ -366,11 +431,7 @@
       color: var(--text);
     }
 
-    .yt-arrow {
-      color: var(--text-low);
-      font-size: 1.1rem;
-      flex-shrink: 0;
-    }
+    .yt-arrow { color: var(--text-low); font-size: 1.1rem; flex-shrink: 0; }
 
     /* ── Tab links ── */
     .tab-links {
@@ -404,20 +465,14 @@
       background: rgba(91,143,212,0.06);
       border: 1px solid rgba(91,143,212,0.2);
     }
-    .tab-btn.male-tab:hover {
-      background: rgba(91,143,212,0.12);
-      border-color: rgba(91,143,212,0.4);
-    }
+    .tab-btn.male-tab:hover { background: rgba(91,143,212,0.12); border-color: rgba(91,143,212,0.4); }
 
     .tab-btn.female-tab {
       color: #e88bba;
       background: rgba(212,91,143,0.06);
       border: 1px solid rgba(212,91,143,0.2);
     }
-    .tab-btn.female-tab:hover {
-      background: rgba(212,91,143,0.12);
-      border-color: rgba(212,91,143,0.4);
-    }
+    .tab-btn.female-tab:hover { background: rgba(212,91,143,0.12); border-color: rgba(212,91,143,0.4); }
 
     /* ── Footer ── */
     footer {
@@ -433,19 +488,13 @@
     footer a { color: var(--text-mid); text-decoration: none; }
     footer a:hover { color: var(--text); }
 
-    /* ── Divider ── */
-    .divider {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 2.5rem 0;
-    }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
 
     @keyframes rise {
       from { opacity: 0; transform: translateY(20px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* ── Responsive ── */
     @media (max-width: 400px) {
       .key-grid { grid-template-columns: 1fr; gap: 8px; }
       .key-card { padding: 1rem; display: flex; align-items: center; gap: 1rem; text-align: left; }
@@ -477,17 +526,16 @@
       <button class="btn-search" id="searchBtn" onclick="doSearch()">Find Key</button>
     </div>
     <p class="search-hint">Works with Vietnamese, English, Korean, and more · diacritics optional</p>
+
+    <!-- Autocomplete dropdown -->
+    <div class="autocomplete" id="autocomplete"></div>
   </section>
 
   <!-- Loading -->
   <div class="loading" id="loading">
     <div class="waveform">
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
+      <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+      <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
       <div class="wave-bar"></div>
     </div>
     <p class="loading-text" id="loadingMsg">Searching karaoke versions…</p>
@@ -550,6 +598,121 @@
 </div>
 
 <script>
+  // ── Autocomplete ──────────────────────────────────────────
+  let acTimer = null;
+  let acActive = -1;
+  let acItems = [];
+
+  const input   = document.getElementById('songInput');
+  const acBox   = document.getElementById('autocomplete');
+
+  input.addEventListener('input', () => {
+    clearTimeout(acTimer);
+    const q = input.value.trim();
+    if (q.length < 2) { hideAc(); return; }
+    acTimer = setTimeout(() => fetchSuggestions(q), 280);
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (!acBox.classList.contains('on')) {
+      if (e.key === 'Enter') doSearch();
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      acActive = Math.min(acActive + 1, acItems.length - 1);
+      renderAcActive();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      acActive = Math.max(acActive - 1, -1);
+      renderAcActive();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (acActive >= 0 && acItems[acActive]) {
+        selectSuggestion(acItems[acActive]);
+      } else {
+        hideAc();
+        doSearch();
+      }
+    } else if (e.key === 'Escape') {
+      hideAc();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-section')) hideAc();
+  });
+
+  async function fetchSuggestions(q) {
+    acBox.innerHTML = '<div class="ac-loading"><div class="ac-spinner"></div> Searching…</div>';
+    acBox.classList.add('on');
+    acActive = -1;
+
+    try {
+      // iTunes Search API - free, no key needed, great international coverage
+      const url = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&entity=song&limit=6&lang=en_us`;
+      const res  = await fetch(url);
+      const data = await res.json();
+
+      acItems = data.results || [];
+
+      if (acItems.length === 0) {
+        acBox.innerHTML = '<div class="ac-loading">No suggestions found</div>';
+        return;
+      }
+
+      acBox.innerHTML = acItems.map((item, i) => `
+        <div class="ac-item" data-index="${i}">
+          ${item.artworkUrl60
+            ? `<img class="ac-art" src="${item.artworkUrl60}" alt="" loading="lazy" />`
+            : `<div class="ac-art-placeholder">🎵</div>`}
+          <div class="ac-info">
+            <div class="ac-track">${escHtml(item.trackName)}</div>
+            <div class="ac-artist">${escHtml(item.artistName)}</div>
+          </div>
+        </div>
+      `).join('');
+
+      acBox.querySelectorAll('.ac-item').forEach(el => {
+        el.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          selectSuggestion(acItems[+el.dataset.index]);
+        });
+        el.addEventListener('mouseover', () => {
+          acActive = +el.dataset.index;
+          renderAcActive();
+        });
+      });
+
+    } catch {
+      hideAc();
+    }
+  }
+
+  function selectSuggestion(item) {
+    input.value = `${item.trackName} ${item.artistName}`;
+    hideAc();
+    doSearch();
+  }
+
+  function renderAcActive() {
+    acBox.querySelectorAll('.ac-item').forEach((el, i) => {
+      el.classList.toggle('active', i === acActive);
+    });
+  }
+
+  function hideAc() {
+    acBox.classList.remove('on');
+    acBox.innerHTML = '';
+    acActive = -1;
+    acItems = [];
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Key Search ────────────────────────────────────────────
   const loadingMessages = [
     'Searching karaoke versions…',
     'Checking music databases…',
@@ -569,15 +732,13 @@
     }, 2200);
   }
 
-  function stopLoadingMessages() {
-    clearInterval(msgTimer);
-  }
+  function stopLoadingMessages() { clearInterval(msgTimer); }
 
   async function doSearch() {
-    const song = document.getElementById('songInput').value.trim();
+    const song = input.value.trim();
     if (!song) return;
+    hideAc();
 
-    // Reset UI
     document.getElementById('error').classList.remove('on');
     document.getElementById('result').classList.remove('on');
     document.getElementById('loading').classList.add('on');
@@ -585,19 +746,15 @@
     startLoadingMessages();
 
     try {
-      const res = await fetch('/api/search', {
+      const res  = await fetch('/api/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ song }),
       });
 
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Something went wrong. Please try again.');
-      }
-
-      // Populate results
       document.getElementById('rSong').textContent   = data.song   || song;
       document.getElementById('rOrig').textContent   = data.original;
       document.getElementById('rMale').textContent   = data.male;
@@ -639,10 +796,6 @@
       document.getElementById('searchBtn').disabled = false;
     }
   }
-
-  document.getElementById('songInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') doSearch();
-  });
 </script>
 
 </body>
